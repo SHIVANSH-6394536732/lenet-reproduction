@@ -1,3 +1,4 @@
+from warnings import simplefilter
 import numpy as np
 
 class Conv2D:
@@ -26,4 +27,48 @@ class Conv2D:
         for patch , i , j in self.iterate_regions(image):
             output[i , j] = np.sum(patch  * self.filters, axis = (1,2))
 
+        return output
+
+
+class MaxPool2D:
+    def __init__(self, pool_size = 2):
+        self.pool_size = pool_size
+
+    def forward(self,input):
+        self.last_input = input
+        h,w,num_filters = input.shape
+        new_h = h // self.pool_size
+        new_w = w // self.pool_size
+
+
+        output = np.zeros((new_h , new_w , num_filters))
+
+
+        for i in range(new_h):
+            for j in range(new_w):
+                region = input[
+                    i*self.pool_size :   (i + 1) * self.pool_size,
+                    j*self.pool_size :   (j + 1) * self.pool_size,
+                    :
+
+                ]
+
+                output[i , j] = np.max(region, axis =(0,1))
+
+        return output
+ 
+
+
+
+
+class FullyConnected:
+    def __init__(self,input_size , output_size):
+        self.weights = np.random.randn(input_size * output_size) * 0.1
+        self.bias  = np.zeros(output_size)
+
+
+    def forward(self,input):
+        self.last_input_shape  = input.shape
+        self.last_input = input.flatten()
+        output = np.dot(self.last_input , self.weights) + self.bias
         return output
