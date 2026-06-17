@@ -10,7 +10,7 @@ class LeNet5:
         self.relu1 = ReLu()
         self.pool1 = MaxPool2D(pool_size= 2)
 
-        self.conv2 = Conv2D(num_filters= 16 , filter_size= 5)
+        self.conv2 = Conv2D(num_filters= 16 , filter_size= 5 , input_channels= 6)
         self.relu2 = ReLu()
         self.pool2 = MaxPool2D(pool_size= 2)
 
@@ -43,7 +43,7 @@ class LeNet5:
 
         return out
 
-        
+
 
 
 

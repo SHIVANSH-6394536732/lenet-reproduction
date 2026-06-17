@@ -2,30 +2,34 @@ from warnings import simplefilter
 import numpy as np
 
 class Conv2D:
-    def __init__(self, num_filters , filter_size):
+    def __init__(self, num_filters, filter_size, input_channels=1):
         self.num_filters = num_filters
         self.filter_size = filter_size
+        self.input_channels = input_channels
         self.filters = np.random.randn(
-            num_filters , filter_size , filter_size
+            num_filters, filter_size, filter_size, input_channels
         ) * 0.1
-    
-    def iterate_regions(self,image):
-        h,w = image.shape
-        for i in range (h - self.filter_size - 1):
-            for j in range ( w - self.filter_size - 1 ):
-                patch =  image[i: i + self.filter_size, j: j + self.filter_size]
-                yield patch , i , j
 
-    def forward(self,image):
+    def iterate_regions(self, image):
+        h, w, c = image.shape
+        for i in range(h - self.filter_size + 1):
+            for j in range(w - self.filter_size + 1):
+                patch = image[i:i+self.filter_size, j:j+self.filter_size, :]
+                yield patch, i, j
+
+    def forward(self, image):
+        if image.ndim == 2:
+            image = image[:, :, np.newaxis]
+
         self.last_input = image
-        h,w = image.shape
+        h, w, c = image.shape
         output_h = h - self.filter_size + 1
         output_w = w - self.filter_size + 1
-        output = np.zeros((output_h, output_w , self.num_filters))
+        output = np.zeros((output_h, output_w, self.num_filters))
 
-
-        for patch , i , j in self.iterate_regions(image):
-            output[i , j] = np.sum(patch  * self.filters, axis = (1,2))
+        for patch, i, j in self.iterate_regions(image):
+            for f in range(self.num_filters):
+                output[i, j, f] = np.sum(patch * self.filters[f])
 
         return output
 
@@ -63,7 +67,7 @@ class MaxPool2D:
 
 class FullyConnected:
     def __init__(self,input_size , output_size):
-        self.weights = np.random.randn(input_size * output_size) * 0.1
+        self.weights = np.random.randn(input_size , output_size) * 0.1
         self.bias  = np.zeros(output_size)
 
 
