@@ -1,5 +1,10 @@
 import numpy as np 
 
+def softmax(x):
+    shifted = x - np.max(x)
+    exp_values = np.exp(shifted)
+    return exp_values / np.sum(exp_values)
+
 class CrossEntropyLoss:
     def forward(self,predictions,true_label):
         self.predictions = predictions
