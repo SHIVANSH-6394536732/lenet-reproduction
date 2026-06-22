@@ -60,7 +60,31 @@ class MaxPool2D:
                 output[i , j] = np.max(region, axis =(0,1))
 
         return output
+
+    def backward(self , grad_output):
+        grad_input = np.zeros(self.last_input.shape)
+        h, w, num_filters = grad_output.shape
+
+        for i in range(h):
+            for j in range(w):
+                region = self.last_input[
+                    i*self.pool_size: (i+1) * self.pool_size,
+                    j*self.pool_size: (j+1) * self.pool_size,
+                    :
+                ]
+                for f in range(num_filters):
+                    max_val = np.max(region[: , : , f])
+                    for x in range(region.shape[0]):
+                        for y in range(region.shape[1]):
+                            if region[x,y,f] == max_val:
+                                grad_input[
+                                    i*self.pool_size +x,
+                                    j*self.pool_size +y,
+                                    f
+                                ] = grad_output[i,j,f]
+        return grad_input
  
+
 
 
 
@@ -76,3 +100,13 @@ class FullyConnected:
         self.last_input = input.flatten()
         output = np.dot(self.last_input , self.weights) + self.bias
         return output
+
+    def backward(self, grad_output ,  learning_rate = 0.1):
+        grad_weights = np.outer(self.last_input, grad_output)
+        grad_bias = grad_output
+        grad_input = np.dot(grad_output, self.weights.T)
+
+        self.weights -= learning_rate * grad_weights
+        self.bias -= learning_rate * grad_bias
+
+        return grad_input.reshape(self.last_input_shape)
