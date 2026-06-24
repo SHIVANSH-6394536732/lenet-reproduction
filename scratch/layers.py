@@ -34,6 +34,23 @@ class Conv2D:
         return output
 
 
+
+        def backward(self, grad_output, learning_rate=0.1):
+        grad_filters = np.zeros(self.filters.shape)
+        grad_input = np.zeros(self.last_input.shape)
+
+        for patch, i, j in self.iterate_regions(self.last_input):
+            for f in range(self.num_filters):
+                grad_filters[f] += patch * grad_output[i, j, f]
+                grad_input[i:i+self.filter_size, j:j+self.filter_size, :] += (
+                    self.filters[f] * grad_output[i, j, f]
+                )
+
+        self.filters -= learning_rate * grad_filters
+
+        return grad_input
+
+
 class MaxPool2D:
     def __init__(self, pool_size = 2):
         self.pool_size = pool_size
