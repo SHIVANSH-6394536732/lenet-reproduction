@@ -27,7 +27,7 @@ model = LeNet5()
 loss_fn = CrossEntropyLoss()
 
 num_samples = 1000  # small subset first, to test quickly
-learning_rate = 0.0005
+learning_rate = 0.0008
 for epoch in range(3):
     total_loss = 0
     correct = 0
@@ -43,6 +43,10 @@ for epoch in range(3):
         # Loss
         loss = loss_fn.forward(probs, label)
         total_loss += loss
+
+
+        if loss > 15:
+            print(f"WARNING: Sample {idx} hit epsilon floor (loss={loss:.4f}). Prediction collapsed.")
 
         if np.isnan(loss):
             print(f"NaN detected at sample {idx}! Raw output was:", raw_output)

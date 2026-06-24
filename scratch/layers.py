@@ -9,7 +9,7 @@ class Conv2D:
         self.filters = np.random.randn(
             num_filters, filter_size, filter_size, input_channels
         ) * 0.1
-
+        self.bias = np.zeros(num_filters)
     def iterate_regions(self, image):
         h, w, c = image.shape
         for i in range(h - self.filter_size + 1):
@@ -29,7 +29,7 @@ class Conv2D:
 
         for patch, i, j in self.iterate_regions(image):
             for f in range(self.num_filters):
-                output[i, j, f] = np.sum(patch * self.filters[f])
+                output[i, j, f] = np.sum(patch * self.filters[f]) + self.bias[f]
 
         return output
 
@@ -37,16 +37,19 @@ class Conv2D:
 
     def backward(self, grad_output, learning_rate=0.1):
         grad_filters = np.zeros(self.filters.shape)
+        grad_bias = np.zeros(self.num_filters)
         grad_input = np.zeros(self.last_input.shape)
 
         for patch, i, j in self.iterate_regions(self.last_input):
             for f in range(self.num_filters):
                 grad_filters[f] += patch * grad_output[i, j, f]
+                grad_bias[f] += grad_output[i, j, f]
                 grad_input[i:i+self.filter_size, j:j+self.filter_size, :] += (
                     self.filters[f] * grad_output[i, j, f]
                 )
 
         self.filters -= learning_rate * grad_filters
+        self.bias -= learning_rate * grad_bias
 
         return grad_input
 
@@ -108,7 +111,7 @@ class MaxPool2D:
 
 class FullyConnected:
     def __init__(self,input_size , output_size):
-        self.weights = np.random.randn(input_size , output_size) * 0.1
+        self.weights = np.random.randn(input_size, output_size) * 0.1
         self.bias  = np.zeros(output_size)
 
 
