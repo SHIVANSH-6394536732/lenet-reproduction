@@ -54,3 +54,23 @@ for epoch in range(num_epochs):
     print(f"Epoch {epoch+1}/{num_epochs} | Loss: {avg_loss:.4f} | Accuracy: {accuracy:.2f}%")
 
 print("\nTraining complete!")
+
+# Save the trained model
+torch.save(model.state_dict(), 'lenet5_mnist.pth')
+print("Model saved as lenet5_mnist.pth")
+
+# Evaluate on test set
+model.eval()
+test_correct = 0
+test_total = 0
+
+with torch.no_grad():
+    for images, labels in test_loader:
+        images, labels = images.to(device), labels.to(device)
+        outputs = model(images)
+        predictions = outputs.argmax(dim=1)
+        test_correct += (predictions == labels).sum().item()
+        test_total += labels.size(0)
+
+test_accuracy = 100 * test_correct / test_total
+print(f"\nTest Accuracy: {test_accuracy:.2f}% ({test_correct}/{test_total})")
