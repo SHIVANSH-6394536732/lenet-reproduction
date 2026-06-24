@@ -36,18 +36,43 @@ canvas_result = st_canvas(
 if canvas_result.image_data is not None:
     img = canvas_result.image_data.astype(np.uint8)
     img = Image.fromarray(img).convert('L')
-    img = img.resize((28, 28))
+    img_array_full = np.array(img)
 
-    img_array = np.array(img).astype(np.float32) / 255.0
-    img_tensor = torch.tensor(img_array).unsqueeze(0).unsqueeze(0)
+    # Find bounding box of the drawn digit
+    coords = np.argwhere(img_array_full > 20)
 
-    if st.button("Predict"):
-        with torch.no_grad():
-            output = model(img_tensor)
-            probs = torch.softmax(output, dim=1)
-            prediction = probs.argmax(dim=1).item()
-            confidence = probs[0][prediction].item()
+    if coords.shape[0] > 0:
+        y_min, x_min = coords.min(axis=0)
+        y_max, x_max = coords.max(axis=0)
 
-        st.success(f"Predicted Digit: **{prediction}** (Confidence: {confidence*100:.2f}%)")
+        # Crop to the digit's bounding box
+        cropped = img_array_full[y_min:y_max+1, x_min:x_max+1]
+        cropped_img = Image.fromarray(cropped)
 
-        st.bar_chart(probs[0].numpy())
+        # Resize so the digit fills ~20x20, leaving padding like real MNIST
+        cropped_img.thumbnail((20, 20), Image.LANCZOS)
+
+        # Paste onto a centered 28x28 black canvas
+        final_img = Image.new('L', (28, 28), color=0)
+        paste_x = (28 - cropped_img.width) // 2
+        paste_y = (28 - cropped_img.height) // 2
+        final_img.paste(cropped_img, (paste_x, paste_y))
+
+        img_array = np.array(final_img).astype(np.float32) / 255.0
+
+        st.write("This is what the model sees (28x28):")
+        st.image(img_array, width=140, clamp=True)
+
+        img_tensor = torch.tensor(img_array).unsqueeze(0).unsqueeze(0)
+
+        if st.button("Predict"):
+            with torch.no_grad():
+                output = model(img_tensor)
+                probs = torch.softmax(output, dim=1)
+                prediction = probs.argmax(dim=1).item()
+                confidence = probs[0][prediction].item()
+
+            st.success(f"Predicted Digit: **{prediction}** (Confidence: {confidence*100:.2f}%)")
+            st.bar_chart(probs[0].numpy())
+    else:
+        st.write("Draw something first!")
