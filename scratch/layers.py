@@ -35,7 +35,7 @@ class Conv2D:
 
 
 
-        def backward(self, grad_output, learning_rate=0.1):
+    def backward(self, grad_output, learning_rate=0.1):
         grad_filters = np.zeros(self.filters.shape)
         grad_input = np.zeros(self.last_input.shape)
 
